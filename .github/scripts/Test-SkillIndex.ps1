@@ -98,9 +98,11 @@ try {
         'microsoft/skills/review/al-scm-review.md',
         'microsoft/skills/review/al-finance-review.md'
     )
-    $review = @($skills | Where-Object id -eq 'al-code-review')
+    $review = @($skills | Where-Object {
+            $_.id -eq 'al-code-review' -and $_.path -ceq 'microsoft/skills/review/al-code-review.md'
+        })
     if ($review.Count -ne 1) {
-        throw "Expected exactly one al-code-review record, found $($review.Count)."
+        throw "Expected exactly one Microsoft al-code-review record, found $($review.Count)."
     }
     if ((@($review[0].subSkills) -join "`n") -cne ($expectedLeaves -join "`n")) {
         throw "al-code-review subSkills did not preserve the declared $($expectedLeaves.Count)-leaf order."
@@ -113,13 +115,13 @@ try {
     }
 
     $minimalReport = @{
-        skill = @{ id = 'al-style-review'; version = 1 }
-        outcome = 'completed'
-        summary = @{
-            counts = @{ blocker = 0; major = 0; minor = 0; info = 0 }
+        skill      = @{ id = 'al-style-review'; version = 1 }
+        outcome    = 'completed'
+        summary    = @{
+            counts   = @{ blocker = 0; major = 0; minor = 0; info = 0 }
             coverage = @{ 'worklist-size' = 0; 'items-evaluated' = 0 }
         }
-        findings = @()
+        findings   = @()
         suppressed = @()
     } | ConvertTo-Json -Depth 8
     if (-not ($minimalReport | Test-Json -SchemaFile $reportSchema -ErrorAction Stop)) {
