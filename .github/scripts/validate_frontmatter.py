@@ -586,10 +586,9 @@ def validate_sub_skills_registry(
     action_skills_by_path: dict[str, dict[str, Any]],
     report: Report,
 ) -> None:
-    """R26: a super-skill's declared `sub-skills` must exactly match the
-    `al-*-review.md` leaf files present in the same directory (set equality,
-    ordering-agnostic). This keeps the registered leaf list the single source
-    of truth and fails CI on a forgotten, stale, or missing registration.
+    """R26: declared sub-skills must exist and be valid action-skill leaves.
+    Cross-layer composition is supported; every review leaf beside a
+    super-skill must still be registered so local additions cannot be missed.
 
     Only applies to action-skill files declaring a non-empty list-of-str
     `sub-skills`. Files whose `sub-skills` is malformed are handled by R20.
@@ -607,16 +606,11 @@ def validate_sub_skills_registry(
         if p.resolve() != path.resolve()
     }
 
-    # Declared entries that are not real sibling leaves on disk (missing/stale).
-    for entry in sorted(declared - leaves):
+    # Declared entries may be in another layer, but must exist on disk.
+    for entry in sorted(declared):
         entry_path = root / entry
-        if not entry_path.exists():
+        if not entry_path.is_file():
             report.error(path, "R26", f"declared sub-skill does not exist on disk: {entry}", 1)
-        else:
-            report.error(
-                path, "R26",
-                f"sub-skills entry is not a sibling 'al-*-review.md' leaf: {entry}", 1,
-            )
 
     for entry in ss:
         leaf = action_skills_by_path.get(entry)
