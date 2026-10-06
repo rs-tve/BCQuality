@@ -19,10 +19,10 @@ This is a common review trap on Card and Document pages: a developer binds `Visi
 
 If visibility depends on record state computed in `OnAfterGetRecord` or `OnAfterGetCurrRecord`, place the field inside a `group` with `ShowCaption = false` and bind the group's `Visible` property to the page variable. Use field-level `Visible` with a variable only when the value is known during `OnInit` or `OnOpenPage`.
 
-See sample: `dynamic-visible-on-fields-vs-groups.good.al`.
+See sample: [`dynamic-visible-on-fields-vs-groups.good.al`](dynamic-visible-on-fields-vs-groups.good.al).
 
 ## Anti Pattern
 
 `Visible = IsSpecialRecord` directly on a field, where `IsSpecialRecord` is assigned from `Rec` in `OnAfterGetRecord`. The field looks correct in code review, but never becomes visible at runtime for records that should show it.
 
-See sample: `dynamic-visible-on-fields-vs-groups.bad.al`.
+See sample: [`dynamic-visible-on-fields-vs-groups.bad.al`](dynamic-visible-on-fields-vs-groups.bad.al).
