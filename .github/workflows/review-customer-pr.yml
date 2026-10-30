@@ -85,6 +85,18 @@ jobs:
       - name: Install GitHub Copilot CLI
         run: npm install --global @github/copilot
 
+      - name: Test Copilot PowerShell permission
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.copilot_token }}
+        run: |
+          copilot --version
+          copilot \
+            -p 'Gebruik de shell-tool om exact dit read-only commando uit te voeren: pwsh -NoProfile -Command "Get-Content .bcquality-runtime/skills/entry.md -TotalCount 1". Meld of het slaagde.' \
+            --add-dir="$GITHUB_WORKSPACE/.bcquality-runtime" \
+            --allow-tool=read \
+            --allow-tool='shell(pwsh:*)' \
+            --no-ask-user
+
       - name: Execute BCQuality with Copilot
         shell: bash
         env:
@@ -140,9 +152,15 @@ jobs:
           Do not post comments, access secrets, or modify customer files.
           Only write review artifacts inside $RESULT_DIR.
 
-          The index is already built. If a necessary tool or instruction
-          cannot be executed, report incomplete coverage; never simulate it.
-          Entry dispatch alone is not a completed review.
+          The index is already built. Do not use Python to inspect it.
+          Use the BCQuality PowerShell retrieval helpers when permitted.
+          If a helper or PowerShell is unavailable or denied, follow READ's
+          documented native bounded-read fallback: discover exact article paths
+          in the enabled knowledge domains, read selected articles fully, and
+          validate their frontmatter. Do not mark coverage incomplete solely
+          because a helper could not run; first attempt this fallback.
+          If neither retrieval route works, report incomplete coverage and
+          identify exactly which leaf skills could not be completed.
 
           Severity:
           critical: evidenced security, data loss, or outage risk.
@@ -344,11 +362,12 @@ jobs:
 
             const s = result.summary;
             const complete =
-              (s.status === 'completed' && (s.coverage === 'full' || s.coverage === 'partial')) &&
+              s.status === 'completed' &&
+              s.coverage === 'full' &&
               s.entryExecuted === true &&
               Array.isArray(s.skillsExecuted) &&
               s.skillsExecuted.length > 0;
-  
+
             let body =
               `## BCQuality review\n\n` +
               `- Status: **${s.status}**\n` +
@@ -373,12 +392,6 @@ jobs:
               owner, repo, issue_number: pull_number, body
             });
 
-            const hardIncomplete =
-              s.status === 'failed' ||
-              s.entryExecuted !== true ||
-              !Array.isArray(s.skillsExecuted) ||
-              s.skillsExecuted.length === 0;
-
-            if (hardIncomplete) {
+            if (!complete) {
               core.setFailed('BCQuality review execution was incomplete.');
             }
