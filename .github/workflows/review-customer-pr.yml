@@ -152,15 +152,30 @@ jobs:
           Do not post comments, access secrets, or modify customer files.
           Only write review artifacts inside $RESULT_DIR.
 
-          The index is already built. Do not use Python to inspect it.
-          Use the BCQuality PowerShell retrieval helpers when permitted.
-          If a helper or PowerShell is unavailable or denied, follow READ's
-          documented native bounded-read fallback: discover exact article paths
-          in the enabled knowledge domains, read selected articles fully, and
-          validate their frontmatter. Do not mark coverage incomplete solely
-          because a helper could not run; first attempt this fallback.
-          If neither retrieval route works, report incomplete coverage and
-          identify exactly which leaf skills could not be completed.
+          The knowledge index is already built.
+
+          PowerShell has been verified available. Invoke retrieval helpers using
+          standalone shell calls starting with pwsh -NoProfile -Command.
+          Do not prepend cd, which, or other shell commands.
+          Do not use Python or combine PowerShell with unrelated shell commands.
+          Resolve all helper paths against the absolute BCQuality checkout path.
+
+          Read skills/read.md and skills/do.md before executing the leaves.
+          Use Search-Knowledge.ps1 and Get-KnowledgeArticles.ps1 according to
+          READ, including pagination and full selected-article reads.
+
+          If a compound shell command is denied, retry the required retrieval
+          as a standalone PowerShell command before declaring it unavailable.
+          Use the native bounded-read fallback only if that attempt also fails.
+
+          Execute every leaf listed by the dispatched super-skill individually.
+          A small diff or an apparently behavior-preserving change is not a
+          reason to skip leaf execution or applicable knowledge retrieval.
+          Write artifacts with the permitted file-writing tool, not Python.
+
+          If execution remains incomplete, identify each affected leaf and
+          the exact failed operation. Do not describe PowerShell as unavailable
+          when only a different or compound command was denied.
 
           Severity:
           critical: evidenced security, data loss, or outage risk.
